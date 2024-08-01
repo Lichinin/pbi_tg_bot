@@ -1,0 +1,73 @@
+import asyncio
+import os
+
+import requests
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from requests.auth import HTTPBasicAuth
+from telegram import Bot
+import time 
+load_dotenv()
+
+
+class Decoder2200:
+    def __init__(self, device_ip, password, location):
+        self.device_ip = device_ip
+        self.username = os.getenv('USER')
+        self.password = os.getenv(password)
+        self.token = os.getenv('TELEGRAM_TOKEN')
+        self.chat_id = os.getenv('CHAT_ID')
+        self.location = location
+        self.decoder_data = None
+        self.video_status = None
+        self.audio_status = None
+
+    def get_decoder_data(self):
+        url = f'http://{self.device_ip}/cgi-bin/status.cgi'
+        tuner_response = requests.get(
+            url,
+            auth=HTTPBasicAuth(self.username, self.password)
+        )
+        soup = BeautifulSoup(tuner_response.text, 'html.parser')
+        self.decoder_data = [elem for elem in soup.text.split(';;')]
+
+    def check_video_status(self):
+        if self.decoder_data[6] == '0':
+            self.video_status = 'OK'
+        elif self.decoder_data[6] == '8':
+            self.video_status = 'Bad input TS'
+        else:
+            self.video_status = 'Unknown error'
+
+    def check_audio_status(self):
+        if self.decoder_data[7] == '0':
+            self.audio_status = 'OK'
+        elif self.decoder_data[7] == '8':
+            self.audio_status = 'Bad input TS'
+        else:
+            self.audio_status = 'Unknown error'
+
+    async def send_message(self, message):
+        bot = Bot(token=self.token)
+        await bot.send_message(self.chat_id, message)
+
+    def retry_check_status(self):
+        time.sleep(1)
+        self.get_decoder_data()
+        self.check_video_status()
+        self.check_audio_status()
+        if self.audio_status != 'OK' or self.video_status != 'OK':
+            asyncio.run(self.send_message(
+                f'{self.location}:\n'
+                f'Приемник (IP: {self.device_ip}): ошибка декодирования\n'
+                f'Сервис: {self.decoder_data[65]}\n'
+                f'Audio: {self.audio_status}\n'
+                f'Video: {self.video_status}'
+            ))
+
+    def check_status(self):
+        self.get_decoder_data()
+        self.check_video_status()
+        self.check_audio_status()
+        if self.audio_status != 'OK' or self.video_status != 'OK':
+            self.retry_check_status()
