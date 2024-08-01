@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from requests.auth import HTTPBasicAuth
 from telegram import Bot
-import time 
+import time
 load_dotenv()
 
 
@@ -33,6 +33,7 @@ class Decoder2200:
             self.decoder_data = [elem for elem in soup.text.split(';;')]
         except requests.exceptions.RequestException as e:
             print(f"Error getting decoder data {self.device_ip}: {e}")
+
     def check_video_status(self):
         try:
             if self.decoder_data[6] == '0':

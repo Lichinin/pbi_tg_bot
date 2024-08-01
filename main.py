@@ -1,12 +1,14 @@
 from decoder2200 import Decoder2200
 from decoder1510 import Decoder1510
+import time
+import datetime
 
 skopin_decoders2200 = [
     '192.168.1.62',
     '192.168.1.63',
     '192.168.1.64',
     '192.168.1.65',
-    '192.168.1.68',
+    # '192.168.1.68',
     '192.168.1.70',
     '192.168.1.72',
 ]
@@ -37,7 +39,6 @@ ryazsk_decoders2200 = [
 ]
 
 ryazsk_decoders1510 = [
-    '192.168.1.170',
     '192.168.1.171',
 ]
 
@@ -52,34 +53,42 @@ korablino_decoders2200 = [
 ]
 
 korablino_decoders1510 = [
-    '192.168.1.221',
+    # '192.168.1.221',
 ]
 
-for ip in skopin_decoders2200:
-    pbi = Decoder2200(ip, 'SKOPIN_PASS', 'Скопин')
-    pbi.check_status()
 
+if __name__ == '__main__':
+    while True:
+        print(f'----- Старт проверки {datetime.datetime.now()} -----')
 
-for ip in shilovo_decoders2200:
-    pbi = Decoder2200(ip, 'SHILOVO_PASS', 'Шилово')
-    pbi.check_status()
+        for ip in skopin_decoders2200:
+            pbi = Decoder2200(ip, 'SKOPIN_PASS', 'Скопин')
+            pbi.check_status()
 
-for ip in shilovo_decoders1510:
-    pbi = Decoder1510(ip, 'SHILOVO_PASS', 'Шилово')
-    pbi.check_status()
+        for ip in shilovo_decoders2200:
+            pbi = Decoder2200(ip, 'SHILOVO_PASS', 'Шилово')
+            pbi.check_status()
 
-for ip in ryazsk_decoders2200:
-    pbi = Decoder2200(ip, 'RYAZSK_PASS', 'Ряжск')
-    pbi.check_status()
+        for ip in shilovo_decoders1510:
+            pbi = Decoder1510(ip, 'SHILOVO_PASS', 'Шилово')
+            pbi.check_status()
 
-for ip in ryazsk_decoders1510:
-    pbi = Decoder1510(ip, 'RYAZSK_PASS', 'Ряжск')
-    pbi.check_status()
+        for ip in ryazsk_decoders2200:
+            pbi = Decoder2200(ip, 'RYAZSK_PASS', 'Ряжск')
+            pbi.check_status()
 
-for ip in korablino_decoders2200:
-    pbi = Decoder2200(ip, 'KORABLINO_PASS', 'Кораблино')
-    pbi.check_status()
+        for ip in ryazsk_decoders1510:
+            pbi = Decoder1510(ip, 'RYAZSK_PASS', 'Ряжск')
+            pbi.check_status()
 
-for ip in korablino_decoders1510:
-    pbi = Decoder1510(ip, 'KORABLINO_PASS', 'Кораблино')
-    pbi.check_status()
+        for ip in korablino_decoders2200:
+            pbi = Decoder2200(ip, 'KORABLINO_PASS', 'Кораблино')
+            pbi.check_status()
+
+        for ip in korablino_decoders1510:
+            pbi = Decoder1510(ip, 'KORABLINO_PASS', 'Кораблино')
+            pbi.check_status()
+
+        print(f'-----Проверка завершена {datetime.datetime.now()} -----')
+
+        time.sleep(10)

@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from requests.auth import HTTPBasicAuth
 from telegram import Bot
 import time
-import lxml
 
 load_dotenv()
 
@@ -31,10 +30,16 @@ class Decoder1510:
             url,
             auth=HTTPBasicAuth(self.username, self.password)
         )
-        soup = BeautifulSoup(tuner_response.text, 'lxml-xml')
-        self.video_status = soup.find('video').find('status').get('value').strip()
-        self.audio_status = soup.find('audio').find('status').get('value').strip()
-        self.service_name = soup.find('service_name').get('value').strip()
+        soup = BeautifulSoup(tuner_response.text, 'xml')
+        self.video_status = soup.find(
+            'Video',
+            {'value': '1'}
+        ).find('status').get('value').strip()
+        self.audio_status = soup.find(
+            'Audio',
+            {'value': '1'}
+        ).find('status').get('value').strip()
+        self.service_name = soup.find('service_name').get('value')
 
     async def send_message(self, message):
         bot = Bot(token=self.token)
