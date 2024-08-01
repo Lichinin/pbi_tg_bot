@@ -24,28 +24,36 @@ class Decoder2200:
 
     def get_decoder_data(self):
         url = f'http://{self.device_ip}/cgi-bin/status.cgi'
-        tuner_response = requests.get(
-            url,
-            auth=HTTPBasicAuth(self.username, self.password)
-        )
-        soup = BeautifulSoup(tuner_response.text, 'html.parser')
-        self.decoder_data = [elem for elem in soup.text.split(';;')]
-
+        try:
+            tuner_response = requests.get(
+                url,
+                auth=HTTPBasicAuth(self.username, self.password)
+            )
+            soup = BeautifulSoup(tuner_response.text, 'html.parser')
+            self.decoder_data = [elem for elem in soup.text.split(';;')]
+        except requests.exceptions.RequestException as e:
+            print(f"Error getting decoder data {self.device_ip}: {e}")
     def check_video_status(self):
-        if self.decoder_data[6] == '0':
-            self.video_status = 'OK'
-        elif self.decoder_data[6] == '8':
-            self.video_status = 'Bad input TS'
-        else:
-            self.video_status = 'Unknown error'
+        try:
+            if self.decoder_data[6] == '0':
+                self.video_status = 'OK'
+            elif self.decoder_data[6] == '8':
+                self.video_status = 'Bad input TS'
+            else:
+                self.video_status = 'Unknown error'
+        except Exception as e:
+            print(f"Error getting decoder data {self.device_ip}: {e}")
 
     def check_audio_status(self):
-        if self.decoder_data[7] == '0':
-            self.audio_status = 'OK'
-        elif self.decoder_data[7] == '8':
-            self.audio_status = 'Bad input TS'
-        else:
-            self.audio_status = 'Unknown error'
+        try:
+            if self.decoder_data[7] == '0':
+                self.audio_status = 'OK'
+            elif self.decoder_data[7] == '8':
+                self.audio_status = 'Bad input TS'
+            else:
+                self.audio_status = 'Unknown error'
+        except Exception as e:
+            print(f"Error getting decoder data {self.device_ip}: {e}")
 
     async def send_message(self, message):
         bot = Bot(token=self.token)
@@ -53,6 +61,7 @@ class Decoder2200:
 
     def retry_check_status(self):
         time.sleep(1)
+        print(f'Повторная проверка приемника {self.device_ip}')
         self.get_decoder_data()
         self.check_video_status()
         self.check_audio_status()
@@ -66,8 +75,11 @@ class Decoder2200:
             ))
 
     def check_status(self):
+        print(f'Проверка приемника {self.device_ip}')
         self.get_decoder_data()
         self.check_video_status()
         self.check_audio_status()
+        if self.audio_status is None or self.video_status is None:
+            return
         if self.audio_status != 'OK' or self.video_status != 'OK':
             self.retry_check_status()
