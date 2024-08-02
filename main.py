@@ -1,7 +1,8 @@
-from decoder2200 import Decoder2200
-from decoder1510 import Decoder1510
-import time
 import datetime
+import time
+
+from decoder1510 import Decoder1510
+from decoder2200 import Decoder2200
 
 skopin_decoders2200 = [
     '192.168.1.62',
@@ -91,4 +92,4 @@ if __name__ == '__main__':
 
         print(f'-----Проверка завершена {datetime.datetime.now()} -----')
 
-        time.sleep(10)
+        time.sleep(60)
