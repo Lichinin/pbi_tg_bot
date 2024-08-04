@@ -1,6 +1,8 @@
 import asyncio
 import os
 import time
+import telnetlib
+
 
 import requests
 from bs4 import BeautifulSoup
@@ -73,7 +75,7 @@ class Decoder2200:
                 f'Приемник (IP: {self.device_ip}): ошибка декодирования\n'
                 f'Сервис: {self.decoder_data[65]}\n'
                 f'Audio: {self.audio_status}\n'
-                f'Video: {self.video_status}'
+                f'Video: {self.video_status}\n'
             ))
 
     def check_status(self):
@@ -85,3 +87,15 @@ class Decoder2200:
             return
         if self.audio_status != 'OK' or self.video_status != 'OK':
             self.retry_check_status()
+
+    def reboot_decoder(self):
+        tn = telnetlib.Telnet(self.device_ip)
+
+        tn.read_until(b"login: ")
+        tn.write('root'.encode() + b"\n")
+        tn.read_until(b"Password: ")
+        tn.write('12345'.encode() + b"\n")
+
+        tn.write(b"reboot\n")
+        tn.read_all()
+        tn.close()
