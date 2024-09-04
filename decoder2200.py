@@ -1,4 +1,3 @@
-import asyncio
 import os
 import time
 
@@ -7,6 +6,8 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from requests.auth import HTTPBasicAuth
 from telegram import Bot
+
+from bot import Aiobot
 
 load_dotenv()
 
@@ -22,6 +23,7 @@ class Decoder2200:
         self.decoder_data = None
         self.video_status = None
         self.audio_status = None
+        self.aiobot = Aiobot()
 
     def get_decoder_data(self):
         url = f'http://{self.device_ip}/cgi-bin/status.cgi'
@@ -61,22 +63,24 @@ class Decoder2200:
         bot = Bot(token=self.token)
         await bot.send_message(self.chat_id, message)
 
-    def retry_check_status(self):
+    async def retry_check_status(self):
         time.sleep(1)
         print(f'Повторная проверка приемника {self.device_ip}')
         self.get_decoder_data()
         self.check_video_status()
         self.check_audio_status()
         if self.audio_status != 'OK' or self.video_status != 'OK':
-            asyncio.run(self.send_message(
-                f'{self.location}:\n'
-                f'Приемник (IP: {self.device_ip}): ошибка декодирования\n'
-                f'Сервис: {self.decoder_data[65]}\n'
-                f'Audio: {self.audio_status}\n'
-                f'Video: {self.video_status}'
-            ))
+            aiobot = Aiobot()
+            async with aiobot.session:
+                await aiobot.send_message(
+                    f'{self.location}:\n'
+                    f'Приемник (IP: {self.device_ip}): ошибка декодирования\n'
+                    f'Сервис: {self.decoder_data[65]}\n'
+                    f'Audio: {self.audio_status}\n'
+                    f'Video: {self.video_status}'
+                )
 
-    def check_status(self):
+    async def check_status(self):
         print(f'Проверка приемника {self.device_ip}')
         self.get_decoder_data()
         self.check_video_status()
@@ -84,4 +88,4 @@ class Decoder2200:
         if self.audio_status is None or self.video_status is None:
             return
         if self.audio_status != 'OK' or self.video_status != 'OK':
-            self.retry_check_status()
+            await self.retry_check_status()

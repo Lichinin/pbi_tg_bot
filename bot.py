@@ -1,29 +1,39 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
-from telegram import Update
-from dotenv import load_dotenv
 import os
+
+import aiohttp
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters.command import Command
+from dotenv import load_dotenv
+
 load_dotenv()
 
 
-class MyBot:
-    def __init__(self):
+class Aiobot:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(Aiobot, cls).__new__(cls)
+            cls._instance.init()
+        return cls._instance
+
+    def init(self):
         self.token = os.getenv('TELEGRAM_TOKEN')
-        self.updater = Updater(self.token, use_context=True)
-        self.dispatcher = self.updater.dispatcher
+        self.chat_id = os.getenv('CHAT_ID')
+        self.bot = Bot(token=self.token)
+        self.dp = Dispatcher()
+        self.dp.message.register(self.cmd_start, Command("start"))
+        self.session = aiohttp.ClientSession()
 
-        self.dispatcher.add_handler(CommandHandler("start", self.start))
-        self.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, self.echo))
+    async def cmd_start(self, message: types.Message):
+        await message.answer("Hedddllo!")
 
-    def start(self, update, context):
-        user = update.effective_user
-        update.message.reply_text("!!!!!и!")
+    async def send_message(self, text):
+        async with self.session:
+            await self.bot.send_message(chat_id=self.chat_id, text=text)
 
-    def pbi_error(self, message, update: Update, context=CallbackContext):
-        update.message.reply_text(f"{message}!!!!!и!")
+    async def fault_message(self, message: types.Message):
+        await message.answer("Блядь")
 
-    def echo(update, context):
-        update.message.reply_text(update.message.text)
-
-    def run(self):
-        self.updater.start_polling()
-        self.updater.idle()
+    async def run_bot(self):
+        await self.dp.start_polling(self.bot)
