@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from requests.auth import HTTPBasicAuth
 from telegram import Bot
 
+import telnetlib
 from bot import Aiobot
 
 load_dotenv()
@@ -17,6 +18,8 @@ class Decoder2200:
         self.device_ip = device_ip
         self.username = os.getenv('USER')
         self.password = os.getenv(password)
+        self.telnet_username = os.getenv('TELNET_USER')
+        self.telnet_password = os.getenv('TELNET_PASSWORD')
         self.token = os.getenv('TELEGRAM_TOKEN')
         self.chat_id = os.getenv('CHAT_ID')
         self.location = location
@@ -89,3 +92,15 @@ class Decoder2200:
             return
         if self.audio_status != 'OK' or self.video_status != 'OK':
             await self.retry_check_status()
+
+    async def reboot_decoder(self):
+        tn = telnetlib.Telnet(self.device_ip)
+
+        tn.read_until(b"login: ")
+        tn.write(self.telnet_username.encode() + b"\n")
+        tn.read_until(b"Password: ")
+        tn.write(self.telnet_password.encode() + b"\n")
+
+        tn.write(b"reboot\n")
+        tn.read_all()
+        tn.close()
